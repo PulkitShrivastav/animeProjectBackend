@@ -15,7 +15,7 @@ const dataRoute = require('./routes/getData')
 app.use('/api/users', userRoute);
 app.use('/api/mydata', dataRoute)
 
-const PORT = process.env.port;
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
