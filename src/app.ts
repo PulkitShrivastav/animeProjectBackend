@@ -10,7 +10,7 @@ const app: Application = express()
 import api_route from "./routes/apiRoutes"
 
 app.use(cors({
-    origin: "http://localhost:4200",
+    origin: ["http://localhost:4200", "https://sweet-profiterole-c31e74.netlify.app"],
     credentials: true
 }));
 app.use(express.json());
