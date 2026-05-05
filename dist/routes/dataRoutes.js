@@ -5,24 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const db_connection_1 = __importDefault(require("../db_connection"));
+const webToken_1 = require("./webToken");
 const db = db_connection_1.default;
 const data_route = express_1.default.Router({ mergeParams: true });
-// data_route.get('/', async (req, res) => {
-//     const result: any = await db.query('select file_name, js_code, html_code, css_code, buttons from user_files_data;')
-//     // console.log(result.rows)
-//     res.json(result.rows)
-// })
-// function checkButtons(data: Array<string>) {
-//     if (data[0] === '') {
-//         console.log(data)
-//         return null
-//     } else {
-//         console.log(data)
-//         return data
-//     }
-// }
-data_route.get('/allfiles', async (req, res) => {
-    const userID = req.params.userID;
+data_route.get('/allfiles', webToken_1.verifyToken, async (req, res) => {
+    const userID = req.userID;
+    console.log(userID);
     try {
         const result = await db.query('SELECT file_name, file_id FROM user_files_data WHERE user_id = $1', [userID]);
         if (result.rows.length !== 0) {
@@ -37,8 +25,9 @@ data_route.get('/allfiles', async (req, res) => {
         return res.status(500).json({ message: 'Internal Server Error.' });
     }
 });
-data_route.get('/openfiles', async (req, res) => {
-    const userID = req.params.userID;
+data_route.get('/openfiles', webToken_1.verifyToken, async (req, res) => {
+    const userID = req.userID;
+    console.log(userID);
     let result = await db.query('SELECT opened_files FROM my_users WHERE user_id = $1;', [userID]);
     if (result.rows.length !== 0) {
         if (result.rows[0]['opened_files']) {
@@ -69,32 +58,30 @@ data_route.get('/openfiles', async (req, res) => {
             return res.json(res_data);
         }
         else {
-            const query = `SELECT html_code, css_code, js_code FROM user_files_data WHERE file_name = 'new_untitled_file' AND user_id = 2;`;
-            const result = await db.query(query);
-            return res.json(result.rows[0]);
+            return res.json('');
         }
     }
     else {
         return res.status(404).json({ message: 'User not found.' });
     }
 });
-data_route.get('/:fileID', async (req, res) => {
-    const userID = req.params.userID;
-    const fileID = req.params.fileID;
+data_route.put('/:fileID', webToken_1.verifyToken, async (req, res) => {
+    const { fileID, openFiles } = req.body;
+    const userID = req.userID;
     try {
         const result = await db.query('SELECT file_id, file_name, html_code, js_code, css_code, buttons FROM user_files_data WHERE user_id = $1 AND file_id = $2', [userID, fileID]);
         const data_rows = result.rows;
-        let res_data = [];
-        for (let dt of data_rows) {
-            res_data.push({
-                fileID: dt.file_id,
-                file_name: dt.file_name,
-                html_code: dt.html_code,
-                js_code: dt.js_code,
-                css_code: dt.css_code,
-                buttons: dt.buttons
-            });
-        }
+        let res_data = [{
+                fileID: data_rows[0].file_id,
+                file_name: data_rows[0].file_name,
+                html_code: data_rows[0].html_code,
+                js_code: data_rows[0].js_code,
+                css_code: data_rows[0].css_code,
+                buttons: data_rows[0].buttons
+            }];
+        let query = 'UPDATE my_users SET opened_files = $1 WHERE user_id = $2';
+        let queryParams = [openFiles, userID];
+        await db.query(query, queryParams);
         return res.json(res_data);
     }
     catch (e) {
