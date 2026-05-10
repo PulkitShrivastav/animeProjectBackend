@@ -194,7 +194,7 @@ function myHTMLmssg(otp: string, name: string) {
 
 login_route.put('/send_otp', async (req: express.Request, res: express.Response) => {
     const { email_address, firstname } = req.body
-    const get_query = 'SELECT email_address, generated_at, guest_id, attempts FROM verfiy_user WHERE email_address = $1'
+    const get_query = 'SELECT email_address, generated_at, guest_id, attempts FROM verify_user WHERE email_address = $1'
     const result_1 = await db.query(get_query, [email_address])
     if (result_1.rows.length !== 0) {
         const attempts = result_1.rows[0].attemps
@@ -254,22 +254,23 @@ login_route.put('/login', async (req: express.Request, res: express.Response) =>
 })
 
 login_route.put('/verify_otp', async (req: express.Request, res: express.Response) => {
-    const { email_adress, firstname, lastname, myPass, guest_id, otp } = req.body
+    const { email_adress, firstname, lastname, myPass, guest_id, otp_code } = req.body
     const get_query = 'SELECT otp_code, generated_at FROM verify_user WHERE guest_id = $1'
     const result_1 = await db.query(get_query, [guest_id])
     const myOTP = result_1.rows[0].otp_code
     const submit_time = new Date(result_1.rows[0].generated_at).getTime()
     const current_time = Date.now()
     const diff = current_time - submit_time
-    if (otp === myOTP) {
+    console.log(`Client OTP: ${otp_code} || Created OTP: ${myOTP}`)
+    if (otp_code === myOTP) {
         if (diff > 2 * 60 * 1000) {
             return res.json({
                 message: 'Expired'
             })
         }
         const hashed_pass = await bcrypt.hash(myPass, 12)
-        const put_query = 'INSERT INTO my_users (email_address, first_name, last_name, password_hash) VALUES ($1, $2, $3, $4) RETURNING user_id'
-        const queryParams = [email_adress, firstname, lastname, hashed_pass]
+        const put_query = 'INSERT INTO my_users (email_address, username, first_name, last_name, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING user_id'
+        const queryParams = [email_adress, 'testuser11', firstname, lastname, hashed_pass]
         const result = await db.query(put_query, queryParams)
         const userID = result.rows[0].user_id
         const delete_query = 'DELETE FROM verify_user WHERE guest_id = $1'
