@@ -254,14 +254,14 @@ login_route.put('/login', async (req: express.Request, res: express.Response) =>
 })
 
 login_route.put('/verify_otp', async (req: express.Request, res: express.Response) => {
-    const { email_adress, firstname, lastname, myPass, guest_id, otp_code } = req.body
+    const { email_address, firstname, lastname, myPass, guest_id, otp_code } = req.body
     const get_query = 'SELECT otp_code, generated_at FROM verify_user WHERE guest_id = $1'
     const result_1 = await db.query(get_query, [guest_id])
     const myOTP = result_1.rows[0].otp_code
     const submit_time = new Date(result_1.rows[0].generated_at).getTime()
     const current_time = Date.now()
     const diff = current_time - submit_time
-    console.log(`Client OTP: ${otp_code} || Created OTP: ${myOTP}`)
+    console.log(`Client OTP: ${otp_code} || Created OTP: ${myOTP} || email_address: ${email_address}`)
     if (otp_code === myOTP) {
         if (diff > 2 * 60 * 1000) {
             return res.json({
@@ -270,7 +270,7 @@ login_route.put('/verify_otp', async (req: express.Request, res: express.Respons
         }
         const hashed_pass = await bcrypt.hash(myPass, 12)
         const put_query = 'INSERT INTO my_users (email_address, username, first_name, last_name, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING user_id'
-        const queryParams = [email_adress, 'testuser11', firstname, lastname, hashed_pass]
+        const queryParams = [email_address, 'testuser12', firstname, lastname, hashed_pass]
         const result = await db.query(put_query, queryParams)
         const userID = result.rows[0].user_id
         const delete_query = 'DELETE FROM verify_user WHERE guest_id = $1'
