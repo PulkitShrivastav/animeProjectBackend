@@ -3,6 +3,7 @@ import pool from '../db_connection'
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt"
 import { getToken, refToken } from './webToken';
+import { randomBytes } from 'node:crypto';
 
 const db = pool
 const login_route = express.Router()
@@ -219,7 +220,7 @@ login_route.put('/send_otp', async (req: express.Request, res: express.Response)
 
 login_route.put('/login', async (req: express.Request, res: express.Response) => {
     const { email_address, password } = req.body
-    const get_query = 'SELECT user_id, first_name, password_hash FROM my_users WHERE email_address = $1'
+    const get_query = 'SELECT user_id, first_name, last_name, password_hash FROM my_users WHERE email_address = $1'
     const result = await db.query(get_query, [email_address])
     if (result.rows.length === 0) {
         return res.json({ message: 'Failed' })
@@ -227,6 +228,7 @@ login_route.put('/login', async (req: express.Request, res: express.Response) =>
     const stored_pass = result.rows[0].password_hash
     const userID: number = result.rows[0].user_id
     const firstname = result.rows[0].first_name
+    const last_name = result.rows[0].last_name
     const isOkay = await bcrypt.compare(password, stored_pass)
     if (!isOkay) {
         return res.json({ message: 'Failed' })
@@ -245,12 +247,15 @@ login_route.put('/login', async (req: express.Request, res: express.Response) =>
         sameSite: process.env.environment === 'production' ? 'none' : 'lax',
         maxAge: 3 * 24 * 60 * 60 * 1000
     })
-    return res.json({
+    const resObject = {
         message: 'Success',
         user_id: userID,
         firstname: firstname,
-        user_email: email_address
-    })
+        user_email: email_address,
+        lastname: last_name
+    }
+    console.log(resObject)
+    return res.json(resObject)
 })
 
 login_route.put('/verify_otp', async (req: express.Request, res: express.Response) => {
@@ -270,7 +275,8 @@ login_route.put('/verify_otp', async (req: express.Request, res: express.Respons
         }
         const hashed_pass = await bcrypt.hash(myPass, 12)
         const put_query = 'INSERT INTO my_users (email_address, username, first_name, last_name, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING user_id'
-        const queryParams = [email_address, 'testuser12', firstname, lastname, hashed_pass]
+        const username = randomBytes(Math.ceil(4)).toString("hex").slice(0, 8)
+        const queryParams = [email_address, username, firstname, lastname, hashed_pass]
         const result = await db.query(put_query, queryParams)
         const userID = result.rows[0].user_id
         const delete_query = 'DELETE FROM verify_user WHERE guest_id = $1'
@@ -312,14 +318,17 @@ login_route.put('/resend_otp', async (req: express.Request, res: express.Respons
 })
 
 login_route.put('/demo-login', async (req, res) => {
-    const newToken = getToken({ user_id: 2, user_email: 'pulkitadmin01.dev_anime@gmail.com' })
+    const user_id = 12
+    const result = await db.query('SELECT * from my_users where user_id = $1', [user_id])
+    console.log(result.rows)
+    const newToken = getToken({ user_id, user_email: result.rows[0].email_address })
     res.cookie('accs_token', newToken, {
         httpOnly: true,
         secure: process.env.environment === 'production',
         sameSite: process.env.environment === 'production' ? 'none' : 'lax',
         maxAge: 15 * 60 * 1000,
     })
-    const ref_token = refToken({ user_id: 2, user_email: 'pulkitadmin01.dev_anime@gmail.com' })
+    const ref_token = refToken({ user_id, user_email: result.rows[0].email_address })
     res.cookie('ref_token', ref_token, {
         httpOnly: true,
         secure: process.env.environment === 'production',
@@ -328,6 +337,10 @@ login_route.put('/demo-login', async (req, res) => {
     })
     return res.json({
         message: 'Demo-Login',
+        user_id,
+        email_address: result.rows[0].email_address,
+        firstname: result.rows[0].first_name,
+        lastname: result.rows[0].last_name
     })
 })
 

@@ -20,17 +20,17 @@ api_route.put('/savefile', webToken_1.verifyToken, async (req, res) => {
         const result = await db.query(query, queryParams);
         const res_data = result.rows[0];
         return res.json([{
-                fileID: res_data.file_id,
-                file_name: res_data.file_name,
-                js_code: res_data.js_code,
-                css_code: res_data.css_code,
-                html_code: res_data.html_code,
-                buttons: res_data.buttons
-            }]);
+            fileID: res_data.file_id,
+            file_name: res_data.file_name,
+            js_code: res_data.js_code,
+            css_code: res_data.css_code,
+            html_code: res_data.html_code,
+            buttons: res_data.buttons
+        }]);
     }
     else if (action === 'update') {
         const query = 'UPDATE user_files_data SET js_code = $1, css_code = $2, html_code = $3, buttons = $4 WHERE user_id = $5 AND file_name = $6;';
-        console.log(`js: ${js_code}\ncss: ${css_code}\nhtml: ${html_code}\nbut: ${buttons}\nuser: ${userID}\nfile: ${fileName}`);
+        // console.log(`js: ${js_code}\ncss: ${css_code}\nhtml: ${html_code}\nbut: ${buttons}\nuser: ${userID}\nfile: ${fileName}`);
         const queryParams = [js_code, css_code, html_code, buttons, userID, fileName];
         await db.query(query, queryParams);
         return res.json({ message: 'Updated Succesfully' });

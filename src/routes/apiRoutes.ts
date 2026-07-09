@@ -28,7 +28,7 @@ api_route.put('/savefile', verifyToken, async (req: express.Request<SaveFile>, r
         }])
     } else if (action === 'update') {
         const query = 'UPDATE user_files_data SET js_code = $1, css_code = $2, html_code = $3, buttons = $4 WHERE user_id = $5 AND file_name = $6;'
-        console.log(`js: ${js_code}\ncss: ${css_code}\nhtml: ${html_code}\nbut: ${buttons}\nuser: ${userID}\nfile: ${fileName}`)
+        // console.log(`js: ${js_code}\ncss: ${css_code}\nhtml: ${html_code}\nbut: ${buttons}\nuser: ${userID}\nfile: ${fileName}`)
         const queryParams = [js_code, css_code, html_code, buttons, userID, fileName]
         await db.query(query, queryParams)
         return res.json({ message: 'Updated Succesfully' })
@@ -48,9 +48,11 @@ api_route.get('/delete_file', verifyToken, async (req: express.Request, res: exp
 
 api_route.put('/closefile', async (req: express.Request<CloseFile>, res: express.Response) => {
     const { userID, openFiles } = req.body
+    console.log("==> check: ", userID, openFiles)
     let query = 'UPDATE my_users SET opened_files = $1 WHERE user_id = $2'
     let queryParams = [openFiles, userID]
-    await db.query(query, queryParams)
+    const result = await db.query(query, queryParams)
+    // console.log(result)
     res.json({ message: 'Success' })
 })
 
@@ -62,6 +64,7 @@ api_route.get('/newfile', async (req, res) => {
 api_route.put('/renamefile', verifyToken, async (req, res) => {
     const { fileID, newName, oldName } = req.body
     const userID = req.userID
+    console.log(`fileID: ${fileID}, newName: ${newName}, oldName: ${oldName}`)
     let query = 'UPDATE user_files_data SET file_name = $1 WHERE user_id = $2 AND file_id = $3'
     let queryParams: any = [newName, userID, fileID]
     await db.query(query, queryParams)

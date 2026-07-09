@@ -7,6 +7,6 @@ const pool = new pg_1.Pool({
     password: process.env.db_pass,
     database: process.env.db_name,
 });
-console.log('connection completed', pool);
+// console.log('connection completed', pool);
 exports.default = pool;
 //# sourceMappingURL=db_connection.js.map

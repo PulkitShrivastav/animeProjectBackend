@@ -16,14 +16,14 @@ const refToken = (req) => {
 exports.refToken = refToken;
 const verifyToken = (req, res, next) => {
     const token = req.cookies.accs_token;
-    console.log(token);
+    // console.log(token);
     if (!token) {
         return res.status(401).json({ message: "No token" });
     }
     // const token = header.split(" ")[1];
     try {
         const decoded = jsonwebtoken_1.default.verify(token, SECRET_KEY);
-        console.log(decoded);
+        // console.log(decoded);
         req.userID = decoded.user_id;
         req.email_address = decoded.user_email;
         next();

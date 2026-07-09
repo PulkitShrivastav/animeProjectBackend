@@ -8,13 +8,24 @@ const data_route = express.Router({ mergeParams: true })
 
 data_route.get('/allfiles', verifyToken, async (req: express.Request, res: express.Response) => {
     const userID = req.userID
-    console.log(userID)
     try {
         const result = await db.query('SELECT file_name, file_id FROM user_files_data WHERE user_id = $1', [userID])
-        if (result.rows.length !== 0) {
-            return res.json(result.rows)
+        if (result.rows.length > 0) {
+            console.log(result.rows)
+            return res.status(200).json({
+                files: result.rows
+            })
         } else {
-            return res.status(200).json([])
+            const result = await db.query('SELECT * FROM user_files_data WHERE file_name = $1 and user_id = $2', ['untitled_file', 2])
+            const query = 'INSERT INTO user_files_data(user_id, file_name, js_code, css_code, html_code, buttons) VALUES ($1, $2, $3, $4, $5, $6) RETURNING file_id, file_name, js_code, css_code, html_code, buttons;'
+            const queryParams = [userID, result.rows[0].file_name, result.rows[0].js_code, result.rows[0].css_code, result.rows[0].html_code, result.rows[0].buttons]
+            const new_result = await db.query(query, queryParams)
+            return res.status(200).json({
+                files: [{
+                    file_id: new_result.rows[0].file_id,
+                    file_name: new_result.rows[0].file_name
+                }]
+            })
         }
     }
     catch (e) {
@@ -27,7 +38,8 @@ data_route.get('/openfiles', verifyToken, async (req: express.Request<{ userID: 
     const userID = req.userID
     console.log(userID)
     let result: any = await db.query('SELECT opened_files FROM my_users WHERE user_id = $1;', [userID])
-    if (result.rows.length !== 0) {
+    console.log(result)
+    if (result.rows.length > 0) {
         if (result.rows[0]['opened_files']) {
             const openfiles = result.rows[0]['opened_files'].split('|')
             let query = 'SELECT file_id, file_name, html_code, js_code, css_code, buttons FROM user_files_data WHERE user_id = $1 AND file_name IN ('
@@ -38,8 +50,9 @@ data_route.get('/openfiles', verifyToken, async (req: express.Request<{ userID: 
                 counts += 1
                 queryParams.push(dt)
             }
-            query = query.slice(0, -2)
-            query = query + ');'
+            query = query.slice(0, -2)  // erases space an comma from the last element.
+            query = query + ');' // add ending syntax for the querry.
+            // console.log("Query==> ", query, "QueryParams==>", queryParams)
             result = await db.query(query, queryParams)
             const data_rows = result.rows
             let res_data = []
@@ -53,7 +66,9 @@ data_route.get('/openfiles', verifyToken, async (req: express.Request<{ userID: 
                     buttons: dt.buttons
                 })
             }
-            return res.json(res_data)
+            // console.log("Pulkit==>", data_rows, "Result==>", result)
+            // console.log(res_data)
+            return res.json({ files: res_data })
         } else {
             return res.json('')
         }
@@ -86,5 +101,8 @@ data_route.put('/:fileID', verifyToken, async (req: express.Request<OpenFiles>, 
         res.status(500).json({ message: 'Internal Server Error.' })
     }
 })
+
+
+
 
 export default data_route
