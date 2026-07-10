@@ -11,11 +11,11 @@ const db = pool
 const api_route = express.Router()
 
 api_route.put('/savefile', verifyToken, async (req: express.Request<SaveFile>, res: express.Response) => {
-    const { fileName, js_code, css_code, html_code, buttons, action } = req.body
+    const { file_name, js_code, css_code, html_code, buttons, action } = req.body
     const userID = req.userID
     if (action === 'save') {
         const query = 'INSERT INTO user_files_data(user_id, file_name, js_code, css_code, html_code, buttons) VALUES ($1, $2, $3, $4, $5, $6) RETURNING file_id, file_name, js_code, css_code, html_code, buttons;'
-        const queryParams = [userID, fileName, js_code, css_code, html_code, buttons]
+        const queryParams = [userID, file_name, js_code, css_code, html_code, buttons]
         const result = await db.query(query, queryParams)
         const res_data = result.rows[0]
         return res.json([{
@@ -29,7 +29,7 @@ api_route.put('/savefile', verifyToken, async (req: express.Request<SaveFile>, r
     } else if (action === 'update') {
         const query = 'UPDATE user_files_data SET js_code = $1, css_code = $2, html_code = $3, buttons = $4 WHERE user_id = $5 AND file_name = $6;'
         // console.log(`js: ${js_code}\ncss: ${css_code}\nhtml: ${html_code}\nbut: ${buttons}\nuser: ${userID}\nfile: ${fileName}`)
-        const queryParams = [js_code, css_code, html_code, buttons, userID, fileName]
+        const queryParams = [js_code, css_code, html_code, buttons, userID, file_name]
         await db.query(query, queryParams)
         return res.json({ message: 'Updated Succesfully' })
     }
@@ -56,7 +56,11 @@ api_route.put('/closefile', async (req: express.Request<CloseFile>, res: express
     res.json({ message: 'Success' })
 })
 
-api_route.get('/newfile', async (req, res) => {
+api_route.put('/newfile', async (req, res) => {
+    // const myName = req.body.filename
+    // const userID = req.userID
+    // console.log("Filename: ", myName)
+    // const newQuery = 'UPDATE user_files_data SET file_name = $'
     const result = await db.query('SELECT * FROM user_files_data WHERE file_name = $1 and user_id = $2', ['untitled_file', 2])
     res.json(result.rows)
 })
@@ -64,7 +68,7 @@ api_route.get('/newfile', async (req, res) => {
 api_route.put('/renamefile', verifyToken, async (req, res) => {
     const { fileID, newName, oldName } = req.body
     const userID = req.userID
-    console.log(`fileID: ${fileID}, newName: ${newName}, oldName: ${oldName}`)
+    // console.log(`fileID: ${fileID}, newName: ${newName}, oldName: ${oldName}`)
     let query = 'UPDATE user_files_data SET file_name = $1 WHERE user_id = $2 AND file_id = $3'
     let queryParams: any = [newName, userID, fileID]
     await db.query(query, queryParams)
@@ -72,7 +76,7 @@ api_route.put('/renamefile', verifyToken, async (req, res) => {
     queryParams = [userID]
     const result = await db.query(query, queryParams)
     const data_rows = result.rows
-    console.log(result)
+    // console.log(result)
     let openFiles: string = data_rows[0].opened_files
     const checkFiles: string[] = openFiles.split('|')
     if (openFiles && checkFiles.find(f => f === oldName)) {
@@ -139,7 +143,7 @@ const checkMyToken = (token: string) => {
 }
 
 api_route.get('/check_login', async (req, res) => {
-    console.log('request came')
+    // console.log('request came')
     let token = ''
     token = req.cookies.accs_token
     const myData = checkMyToken(token)
@@ -147,8 +151,8 @@ api_route.get('/check_login', async (req, res) => {
         const userID = myData.userID
         const result = await db.query("SELECT * FROM my_users WHERE user_id = $1", [userID])
         const data = result.rows[0]
-        console.log("==> Data:", data, 'userID', userID)
-        console.log('response sent: logged in success')
+        // console.log("==> Data:", data, 'userID', userID)
+        // console.log('response sent: logged in success')
         return res.status(200).json({
             message: "success",
             data: {

@@ -6,5 +6,5 @@ const pool: Pool = new Pool({
     password: process.env.db_pass,
     database: process.env.db_name,
 });
-console.log('connection completed', pool)
+// console.log('connection completed', pool)
 export default pool;

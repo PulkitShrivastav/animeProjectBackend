@@ -28,7 +28,7 @@ export const verifyToken = (req: any, res: any, next: any) => {
         req.email_address = decoded.user_email
         next();
     } catch (e) {
-        console.log(e)
+        // console.log(e)
         return res.status(401).json({ message: "Invalid token" });
     }
 };

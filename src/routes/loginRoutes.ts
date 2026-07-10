@@ -254,7 +254,7 @@ login_route.put('/login', async (req: express.Request, res: express.Response) =>
         user_email: email_address,
         lastname: last_name
     }
-    console.log(resObject)
+    // console.log(resObject)
     return res.json(resObject)
 })
 
@@ -266,7 +266,7 @@ login_route.put('/verify_otp', async (req: express.Request, res: express.Respons
     const submit_time = new Date(result_1.rows[0].generated_at).getTime()
     const current_time = Date.now()
     const diff = current_time - submit_time
-    console.log(`Client OTP: ${otp_code} || Created OTP: ${myOTP} || email_address: ${email_address}`)
+    // console.log(`Client OTP: ${otp_code} || Created OTP: ${myOTP} || email_address: ${email_address}`)
     if (otp_code === myOTP) {
         if (diff > 2 * 60 * 1000) {
             return res.json({
@@ -320,7 +320,7 @@ login_route.put('/resend_otp', async (req: express.Request, res: express.Respons
 login_route.put('/demo-login', async (req, res) => {
     const user_id = 12
     const result = await db.query('SELECT * from my_users where user_id = $1', [user_id])
-    console.log(result.rows)
+    // console.log(result.rows)
     const newToken = getToken({ user_id, user_email: result.rows[0].email_address })
     res.cookie('accs_token', newToken, {
         httpOnly: true,

@@ -11,7 +11,7 @@ data_route.get('/allfiles', verifyToken, async (req: express.Request, res: expre
     try {
         const result = await db.query('SELECT file_name, file_id FROM user_files_data WHERE user_id = $1', [userID])
         if (result.rows.length > 0) {
-            console.log(result.rows)
+            // console.log(result.rows)
             return res.status(200).json({
                 files: result.rows
             })
@@ -29,16 +29,16 @@ data_route.get('/allfiles', verifyToken, async (req: express.Request, res: expre
         }
     }
     catch (e) {
-        console.log(e)
+        // console.log(e)
         return res.status(500).json({ message: 'Internal Server Error.' })
     }
 })
 
 data_route.get('/openfiles', verifyToken, async (req: express.Request<{ userID: number }>, res: express.Response) => {
     const userID = req.userID
-    console.log(userID)
+    // console.log(userID)
     let result: any = await db.query('SELECT opened_files FROM my_users WHERE user_id = $1;', [userID])
-    console.log(result)
+    // console.log(result)
     if (result.rows.length > 0) {
         if (result.rows[0]['opened_files']) {
             const openfiles = result.rows[0]['opened_files'].split('|')
@@ -97,7 +97,7 @@ data_route.put('/:fileID', verifyToken, async (req: express.Request<OpenFiles>, 
         return res.json(res_data)
     }
     catch (e) {
-        console.log(e)
+        // console.log(e)
         res.status(500).json({ message: 'Internal Server Error.' })
     }
 })

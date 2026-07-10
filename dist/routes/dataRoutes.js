@@ -10,7 +10,7 @@ const db = db_connection_1.default;
 const data_route = express_1.default.Router({ mergeParams: true });
 data_route.get('/allfiles', webToken_1.verifyToken, async (req, res) => {
     const userID = req.userID;
-    console.log(userID);
+    // console.log(userID);
     try {
         const result = await db.query('SELECT file_name, file_id FROM user_files_data WHERE user_id = $1', [userID]);
         if (result.rows.length !== 0) {
@@ -21,13 +21,13 @@ data_route.get('/allfiles', webToken_1.verifyToken, async (req, res) => {
         }
     }
     catch (e) {
-        console.log(e);
+        // console.log(e);
         return res.status(500).json({ message: 'Internal Server Error.' });
     }
 });
 data_route.get('/openfiles', webToken_1.verifyToken, async (req, res) => {
     const userID = req.userID;
-    console.log(userID);
+    // console.log(userID);
     let result = await db.query('SELECT opened_files FROM my_users WHERE user_id = $1;', [userID]);
     if (result.rows.length !== 0) {
         if (result.rows[0]['opened_files']) {
@@ -72,20 +72,20 @@ data_route.put('/:fileID', webToken_1.verifyToken, async (req, res) => {
         const result = await db.query('SELECT file_id, file_name, html_code, js_code, css_code, buttons FROM user_files_data WHERE user_id = $1 AND file_id = $2', [userID, fileID]);
         const data_rows = result.rows;
         let res_data = [{
-                fileID: data_rows[0].file_id,
-                file_name: data_rows[0].file_name,
-                html_code: data_rows[0].html_code,
-                js_code: data_rows[0].js_code,
-                css_code: data_rows[0].css_code,
-                buttons: data_rows[0].buttons
-            }];
+            fileID: data_rows[0].file_id,
+            file_name: data_rows[0].file_name,
+            html_code: data_rows[0].html_code,
+            js_code: data_rows[0].js_code,
+            css_code: data_rows[0].css_code,
+            buttons: data_rows[0].buttons
+        }];
         let query = 'UPDATE my_users SET opened_files = $1 WHERE user_id = $2';
         let queryParams = [openFiles, userID];
         await db.query(query, queryParams);
         return res.json(res_data);
     }
     catch (e) {
-        console.log(e);
+        // console.log(e);
         res.status(500).json({ message: 'Internal Server Error.' });
     }
 });

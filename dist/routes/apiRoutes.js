@@ -67,7 +67,7 @@ api_route.put('/renamefile', webToken_1.verifyToken, async (req, res) => {
     queryParams = [userID];
     const result = await db.query(query, queryParams);
     const data_rows = result.rows;
-    console.log(result);
+    // console.log(result);
     let openFiles = data_rows[0].opened_files;
     const checkFiles = openFiles.split('|');
     if (openFiles && checkFiles.find(f => f === oldName)) {
@@ -103,7 +103,7 @@ api_route.get('/refresh_token', async (req, res) => {
         res.json({ message: 'success' });
     }
     catch (e) {
-        console.log(e);
+        // console.log(e);
         res.status(403).json({ message: 'Expired' });
     }
 });
