@@ -114,6 +114,72 @@ api_route.get('/refresh_token', async (req: express.Request, res: express.Respon
     }
 })
 
+const checkMyToken = (token: string) => {
+    if (!token) {
+        return {
+            success: false,
+            userID: 0
+        }
+    }
+    try {
+        const SECRET_KEY = process.env.jwt_secret as string
+        const decoded = jwt.verify(token, SECRET_KEY) as payload;
+        // console.log(decoded)
+        const userID = decoded.user_id
+        return {
+            success: true,
+            userID,
+        }
+    } catch (e) {
+        return {
+            success: false,
+            userID: 0
+        }
+    }
+}
+
+api_route.get('/check_login', async (req, res) => {
+    console.log('request came')
+    let token = ''
+    token = req.cookies.accs_token
+    const myData = checkMyToken(token)
+    if (myData.success) {
+        const userID = myData.userID
+        const result = await db.query("SELECT * FROM my_users WHERE user_id = $1", [userID])
+        const data = result.rows[0]
+        console.log("==> Data:", data, 'userID', userID)
+        console.log('response sent: logged in success')
+        return res.status(200).json({
+            message: "success",
+            data: {
+                userID,
+                firstname: data.first_name,
+                lastname: data.last_name,
+                user_email: data.email_address
+            }
+        })
+    } else {
+        return res.status(200).json({
+            message: 'failed',
+            data: {}
+        })
+    }
+})
+
+api_route.get('/logout', async (req, res) => {
+    res.clearCookie('accs_token', {
+        httpOnly: true,
+        secure: process.env.environment === 'production',
+        sameSite: process.env.environment === 'production' ? 'none' : 'lax',
+    })
+    res.clearCookie('ref_token', {
+        httpOnly: true,
+        secure: process.env.environment === 'production',
+        sameSite: process.env.environment === 'production' ? 'none' : 'lax',
+    })
+    return res.status(200).json({ message: "success" })
+})
+
 api_route.use('/user', login_route)
 api_route.use('/data', data_route)
 

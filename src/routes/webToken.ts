@@ -16,14 +16,14 @@ export const refToken = (req: payload): string => {
 
 export const verifyToken = (req: any, res: any, next: any) => {
     const token = req.cookies.accs_token;
-    console.log(token)
+    // console.log(token)
     if (!token) {
         return res.status(401).json({ message: "No token" });
     }
     // const token = header.split(" ")[1];
     try {
         const decoded = jwt.verify(token, SECRET_KEY) as payload;
-        console.log(decoded)
+        // console.log(decoded)
         req.userID = decoded.user_id
         req.email_address = decoded.user_email
         next();
